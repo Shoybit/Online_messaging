@@ -21,6 +21,38 @@ export default function Home() {
   }, [messages]);
 
 useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    window.location.href = "/login";
+  }
+}, []);
+
+const sendMessage = () => {
+  if (!text.trim()) return;
+
+let user = {};
+
+try {
+  const stored = localStorage.getItem("user");
+  if (stored && stored !== "undefined") {
+    user = JSON.parse(stored);
+  }
+} catch (err) {
+  console.log("Invalid user in localStorage");
+}
+  const msg = {
+    text,
+    sender: user._id,
+    name: user.name,
+  };
+
+  socket.emit("send_message", msg);
+  addMessage(msg);
+  setText("");
+};
+
+useEffect(() => {
   if (socket.connected) {
     setIsConnected(true);
   }
@@ -44,20 +76,7 @@ useEffect(() => {
   };
 }, []);
 
-  const sendMessage = () => {
-    if (!text.trim()) return;
-    
-    const msg = { 
-      text: text.trim(),
-      timestamp: new Date(),
-      id: Date.now()
-    };
-    
-    socket.emit("send_message", msg);
-    addMessage(msg);
-    setText("");
-    inputRef.current?.focus();
-  };
+
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
