@@ -153,13 +153,12 @@ useEffect(() => {
                 ↵
               </div>
             </div>
-            <button
-              onClick={sendMessage}
-              disabled={!text.trim() || !isConnected}
-              className="bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow"
-            >
-              Send
-            </button>
+<button
+  onClick={sendMessage}
+  className="bg-blue-500 text-white px-6 py-3 rounded-lg"
+>
+  Send
+</button>
           </div>
           <div className="mt-2 text-xs text-gray-400 text-center">
             Press Enter to send
