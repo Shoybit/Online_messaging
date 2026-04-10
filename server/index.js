@@ -12,7 +12,11 @@ app.use(cors());
 
 const server = http.createServer(app);
 
-// ✅ MongoDB connect
+
+const authRoutes = require("./routes/authRoutes");
+
+app.use(express.json()); // VERY IMPORTANT
+app.use("/api/auth", authRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
@@ -20,6 +24,11 @@ mongoose.connect(process.env.MONGO_URI)
 
 const io = new Server(server, {
   cors: { origin: "*" },
+});
+
+
+app.get("/", (req, res) => {
+  res.send("API working");
 });
 
 io.on("connection", (socket) => {
