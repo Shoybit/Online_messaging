@@ -20,28 +20,29 @@ export default function Home() {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    // Socket connection events
-    socket.on("connect", () => {
-      setIsConnected(true);
-    });
+useEffect(() => {
+  if (socket.connected) {
+    setIsConnected(true);
+  }
 
-    socket.on("disconnect", () => {
-      setIsConnected(false);
-    });
+  socket.on("connect", () => {
+    setIsConnected(true);
+  });
 
-    socket.on("receive_message", (data) => {
-      addMessage(data);
-    });
+  socket.on("disconnect", () => {
+    setIsConnected(false);
+  });
 
-    // Cleanup
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("receive_message");
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  socket.on("receive_message", (data) => {
+    addMessage(data);
+  });
+
+  return () => {
+    socket.off("connect");
+    socket.off("disconnect");
+    socket.off("receive_message");
+  };
+}, []);
 
   const sendMessage = () => {
     if (!text.trim()) return;
@@ -71,7 +72,7 @@ export default function Home() {
       <div className="bg-white border-b shadow-sm px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -139,17 +140,15 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="flex space-x-3">
             <div className="flex-1 relative">
-              <input
-                ref={inputRef}
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                placeholder="Type your message..."
-                value={text}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setText(e.target.value)
-                }
-                onKeyPress={handleKeyPress}
-                disabled={!isConnected}
-              />
+<input
+  ref={inputRef}
+  className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12"
+  placeholder="Type your message..."
+  value={text}
+  onChange={(e) => setText(e.target.value)}
+  onKeyDown={handleKeyPress}
+  disabled={false}
+/>
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 hidden sm:block">
                 ↵
               </div>
@@ -157,7 +156,7 @@ export default function Home() {
             <button
               onClick={sendMessage}
               disabled={!text.trim() || !isConnected}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow"
+              className="bg-linear-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow"
             >
               Send
             </button>
