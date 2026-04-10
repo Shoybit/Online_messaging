@@ -1,6 +1,8 @@
 import { create } from "zustand";
 
 type Message = {
+  id: number;
+  timestamp: import("react/jsx-runtime").JSX.Element;
   text: string;
 };
 
