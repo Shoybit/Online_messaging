@@ -15,9 +15,10 @@ export default function Home() {
   const { messages, addMessage } = useChatStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 🔐 Protect page + load user
+  // 🔐 Protect + load user
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     if (!token) {
       window.location.href = "/login";
       return;
@@ -26,48 +27,47 @@ export default function Home() {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser && storedUser !== "undefined") {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        console.log("USER SET:", parsed);
       }
     } catch {
       console.log("Invalid user");
     }
   }, []);
 
-  // 👥 load users
+  // 👥 Load users
   useEffect(() => {
     fetch("http://localhost:5002/api/auth/users")
       .then((res) => res.json())
       .then((data) => setUsers(data));
   }, []);
 
-  // 💬 create/get conversation
-useEffect(() => {
-  if (!currentChat || !user?._id) return;
+  // 💬 Create conversation
+  useEffect(() => {
+    if (!currentChat || !user?._id) return;
 
-  console.log("🔥 Creating conversation...");
+    console.log("🔥 Creating conversation...");
 
-  fetch("http://localhost:5002/api/conversations", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      senderId: user._id,
-      receiverId: currentChat._id,
-    }),
-  })
-    .then(res => res.json())
-    .then(data => {
-      console.log("✅ Conversation:", data);
-      setConversationId(data._id);
-    });
+    fetch("http://localhost:5002/api/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        senderId: user._id,
+        receiverId: currentChat._id,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("✅ Conversation:", data);
+        setConversationId(data._id);
+      });
 
-}, [currentChat, user?._id]); // 🔥 CHANGE THIS
+  }, [currentChat, user?._id]);
 
-
-
-
-  // 🔌 socket
+  // 🔌 Socket receive
   useEffect(() => {
     socket.on("receive_message", (data) => {
       addMessage(data);
@@ -78,23 +78,37 @@ useEffect(() => {
     };
   }, [addMessage]);
 
-  // 📩 send message
-const sendMessage = () => {
-  console.log("CLICKED 🔥");
+  // 📩 Send message
+  const sendMessage = () => {
+    console.log("CLICKED 🔥");
 
-if (!text.trim() || !conversationId) {
-  console.log("BLOCKED ❌", { text, conversationId });
-  return;
-}
+    if (!text.trim() || !conversationId) {
+      console.log("BLOCKED ❌", { text, conversationId });
+      return;
+    }
 
-};
+    const msg = {
+      text: text.trim(),
+      sender: user._id,
+      name: user.name,
+      conversationId,
+      timestamp: new Date().toISOString(),
+    };
 
-  // 🎯 filter messages (IMPORTANT)
+    console.log("SENDING ✅", msg);
+
+    socket.emit("send_message", msg);
+    addMessage(msg);
+
+    setText("");
+  };
+
+  // 🎯 Filter messages
   const filteredMessages = messages.filter(
     (m: any) => m.conversationId === conversationId
   );
 
-  // auto scroll
+  // 🔽 Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [filteredMessages]);
@@ -102,19 +116,21 @@ if (!text.trim() || !conversationId) {
   return (
     <div className="flex h-screen">
 
-      {/* 🔵 Sidebar */}
+      {/* Sidebar */}
       <div className="w-1/4 border-r p-4">
         <h2 className="text-lg font-bold mb-4">Users</h2>
 
         {users.map((u) => (
           <div
             key={u._id}
-           onClick={() => {
-  console.log("SELECT USER:", u);
-  setCurrentChat(u);
-}}
+            onClick={() => {
+              console.log("SELECT USER:", u);
+              setCurrentChat(u);
+            }}
             className={`p-2 cursor-pointer rounded ${
-              currentChat?._id === u._id ? "bg-blue-200" : "hover:bg-gray-100"
+              currentChat?._id === u._id
+                ? "bg-blue-200"
+                : "hover:bg-gray-100"
             }`}
           >
             {u.name}
@@ -122,7 +138,7 @@ if (!text.trim() || !conversationId) {
         ))}
       </div>
 
-      {/* 💬 Chat Area */}
+      {/* Chat Area */}
       <div className="flex-1 flex flex-col">
 
         {/* Header */}
@@ -132,7 +148,7 @@ if (!text.trim() || !conversationId) {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {filteredMessages.map((m, i) => (
+          {filteredMessages.map((m: any, i: number) => (
             <div
               key={i}
               className={`p-2 rounded max-w-xs ${
@@ -162,6 +178,7 @@ if (!text.trim() || !conversationId) {
             <Send size={16} /> Send
           </button>
         </div>
+
       </div>
     </div>
   );
