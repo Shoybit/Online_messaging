@@ -23,9 +23,22 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log(err));
 
 // socket
-const io = new Server(server, {
-  cors: { origin: "*" },
+io.on("connection", (socket) => {
+  console.log("User connected");
+
+  socket.on("send_message", async (data) => {
+    await Message.create(data);
+
+    io.emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
 });
+//conversations
+const convRoutes = require("./routes/conversationRoutes");
+app.use("/api/conversations", convRoutes);
 
 // 🔥 ONLY THIS PART
 io.on("connection", (socket) => {
