@@ -13,38 +13,30 @@ app.use(express.json());
 
 const server = http.createServer(app);
 
+// ✅ SOCKET INIT (VERY IMPORTANT)
+const io = new Server(server, {
+  cors: { origin: "*" },
+});
+
 // routes
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
+
+const convRoutes = require("./routes/conversationRoutes");
+app.use("/api/conversations", convRoutes);
 
 // DB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
-// socket
+// ✅ ONLY ONE SOCKET BLOCK
 io.on("connection", (socket) => {
   console.log("User connected");
 
   socket.on("send_message", async (data) => {
-    await Message.create(data);
+    console.log("MSG:", data);
 
-    io.emit("receive_message", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-//conversations
-const convRoutes = require("./routes/conversationRoutes");
-app.use("/api/conversations", convRoutes);
-
-// 🔥 ONLY THIS PART
-io.on("connection", (socket) => {
-  console.log("User connected");
-
-  socket.on("send_message", async (data) => {
     await Message.create(data);
 
     io.emit("receive_message", data); // sabar kase jabe
