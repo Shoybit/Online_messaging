@@ -11,8 +11,8 @@ export default function Home() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [user, setUser] = useState(null);
   const { messages, addMessage } = useChatStore();
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // auto scroll
   useEffect(() => {
@@ -79,7 +79,6 @@ export default function Home() {
     };
 
     socket.emit("send_message", msg);
-    addMessage(msg);
     setText("");
     inputRef.current?.focus();
   };
